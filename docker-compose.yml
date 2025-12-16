@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.4
+    container_name: gutendex-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gutendex
+      MYSQL_USER: gutuser
+      MYSQL_PASSWORD: gutpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # Automatically initialize schema + data on first startup
+      - ./data/gutendex.sql:/docker-entrypoint-initdb.d/gutendex.sql:ro
+
+  app:
+    build: .
+    container_name: gutendex-api
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      # SQLAlchemy / PyMySQL connection string
+      DATABASE_URL: "mysql+pymysql://gutuser:gutpass@db:3306/gutendex"
+    ports:
+      - "8000:8000"
+
+volumes:
+  db_data:
+
+
